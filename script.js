@@ -446,4 +446,4 @@ function addRipple(e) {
 
 document.querySelectorAll('.btn-attend, .btn-cancel, .btn-save, .btn-holiday').forEach(btn => {
   btn.addEventListener('click', addRipple);
-});
+}); 
