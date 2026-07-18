@@ -69,6 +69,61 @@ let holidays = JSON.parse(localStorage.getItem('holidays') || '[]');
 let rate = +(localStorage.getItem('rate') || 225);
 let deduction = +(localStorage.getItem('deduction') || 0);
 
+/* ── Helpers: التعامل مع بيانات كل فترة بشكل صحيح ── */
+function periodKeyForDate(date) {
+  const y = date.getFullYear();
+  const m = date.getMonth();
+  const d = date.getDate();
+  return d <= 15 ? `${y}-${m + 1}-A` : `${y}-${m + 1}-B`;
+}
+
+function keyToDate(key) {
+  const [y, m, d] = key.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
+function periodKeyForKey(key) {
+  return periodKeyForDate(keyToDate(key));
+}
+
+function getStoredPeriodData(key) {
+  return {
+    attendance: JSON.parse(localStorage.getItem(`attendance_${key}`) || '[]'),
+    holidays: JSON.parse(localStorage.getItem(`holidays_${key}`) || '[]'),
+  };
+}
+
+// يحفظ بيانات فترة معيّنة، ويحدّث المتغيرات الحالية لو كانت هي الفترة الشغالة
+function setStoredPeriodData(key, att, hol) {
+  localStorage.setItem(`attendance_${key}`, JSON.stringify(att));
+  localStorage.setItem(`holidays_${key}`, JSON.stringify(hol));
+  if (key === period.key) {
+    attendance = att;
+    holidays = hol;
+    localStorage.setItem('attendance', JSON.stringify(att));
+    localStorage.setItem('holidays', JSON.stringify(hol));
+  }
+}
+
+// دمج بيانات فترتي الشهر الحالي (A و B) معًا لعرض التقويم والإحصائيات بشكل صحيح
+function getMonthAttendance() {
+  const now = new Date();
+  const keyA = `${now.getFullYear()}-${now.getMonth() + 1}-A`;
+  const keyB = `${now.getFullYear()}-${now.getMonth() + 1}-B`;
+  const dataA = keyA === period.key ? attendance : getStoredPeriodData(keyA).attendance;
+  const dataB = keyB === period.key ? attendance : getStoredPeriodData(keyB).attendance;
+  return [...new Set([...dataA, ...dataB])];
+}
+
+function getMonthHolidays() {
+  const now = new Date();
+  const keyA = `${now.getFullYear()}-${now.getMonth() + 1}-A`;
+  const keyB = `${now.getFullYear()}-${now.getMonth() + 1}-B`;
+  const dataA = keyA === period.key ? holidays : getStoredPeriodData(keyA).holidays;
+  const dataB = keyB === period.key ? holidays : getStoredPeriodData(keyB).holidays;
+  return [...new Set([...dataA, ...dataB])];
+}
+
 $('dailyRate').value = rate;
 $('deductionInput').value = deduction;
 
@@ -145,22 +200,43 @@ function markTodayAsHoliday() {
 
 function saveSelectedDays() {
   if (selectedPastDays.length === 0) return;
+  const groups = {};
   selectedPastDays.forEach(key => {
-    if (!attendance.includes(key)) attendance.push(key);
+    const pk = periodKeyForKey(key);
+    (groups[pk] = groups[pk] || []).push(key);
+  });
+  Object.entries(groups).forEach(([pk, keys]) => {
+    const data = pk === period.key
+      ? { attendance: [...attendance], holidays: [...holidays] }
+      : getStoredPeriodData(pk);
+    keys.forEach(k => { if (!data.attendance.includes(k)) data.attendance.push(k); });
+    setStoredPeriodData(pk, data.attendance, data.holidays);
   });
   selectedPastDays = [];
-  save();
   render();
   showToast('تم تسجيل الأيام المحددة بنجاح ✓');
 }
 
 function cancelSelectedDays() {
   // يلغي فقط أيام الحضور من القائمة (ليس الإجازات)
-  const presentOnly = selectedDaysToCancel.filter(k => !holidays.includes(k));
+  const monthHolidays = getMonthHolidays();
+  const presentOnly = selectedDaysToCancel.filter(k => !monthHolidays.includes(k));
   if (presentOnly.length === 0) return;
-  attendance = attendance.filter(k => !presentOnly.includes(k));
-  selectedDaysToCancel = selectedDaysToCancel.filter(k => holidays.includes(k));
-  save();
+
+  const groups = {};
+  presentOnly.forEach(key => {
+    const pk = periodKeyForKey(key);
+    (groups[pk] = groups[pk] || []).push(key);
+  });
+  Object.entries(groups).forEach(([pk, keys]) => {
+    const data = pk === period.key
+      ? { attendance: [...attendance], holidays: [...holidays] }
+      : getStoredPeriodData(pk);
+    data.attendance = data.attendance.filter(k => !keys.includes(k));
+    setStoredPeriodData(pk, data.attendance, data.holidays);
+  });
+
+  selectedDaysToCancel = selectedDaysToCancel.filter(k => monthHolidays.includes(k));
   render();
   showToast('تم إلغاء حضور الأيام المحددة ✓');
 }
@@ -172,20 +248,28 @@ function markSelectedAsHoliday() {
 
   if (selected.length === 0) return;
 
+  const groups = {};
   selected.forEach(key => {
-    // احذف من الحضور إن وجد
-    attendance = attendance.filter(k => k !== key);
+    const pk = periodKeyForKey(key);
+    (groups[pk] = groups[pk] || []).push(key);
+  });
 
-    // أضف للإجازات إن لم تكن موجودة
-    if (!holidays.includes(key)) {
-      holidays.push(key);
-    }
+  Object.entries(groups).forEach(([pk, keys]) => {
+    const data = pk === period.key
+      ? { attendance: [...attendance], holidays: [...holidays] }
+      : getStoredPeriodData(pk);
+
+    keys.forEach(key => {
+      data.attendance = data.attendance.filter(k => k !== key);
+      if (!data.holidays.includes(key)) data.holidays.push(key);
+    });
+
+    setStoredPeriodData(pk, data.attendance, data.holidays);
   });
 
   selectedPastDays = [];
   selectedDaysToCancel = [];
 
-  save();
   render();
   showToast('تم تحويل الأيام المحددة إلى إجازة رسمية ✓');
 }
@@ -193,9 +277,21 @@ function markSelectedAsHoliday() {
 /* ── إلغاء إجازات رسمية محددة ─────────────────── */
 function cancelSelectedHolidays() {
   if (selectedDaysToCancel.length === 0) return;
-  holidays = holidays.filter(k => !selectedDaysToCancel.includes(k));
+
+  const groups = {};
+  selectedDaysToCancel.forEach(key => {
+    const pk = periodKeyForKey(key);
+    (groups[pk] = groups[pk] || []).push(key);
+  });
+  Object.entries(groups).forEach(([pk, keys]) => {
+    const data = pk === period.key
+      ? { attendance: [...attendance], holidays: [...holidays] }
+      : getStoredPeriodData(pk);
+    data.holidays = data.holidays.filter(k => !keys.includes(k));
+    setStoredPeriodData(pk, data.attendance, data.holidays);
+  });
+
   selectedDaysToCancel = [];
-  save();
   render();
   showToast('تم إلغاء الإجازات المحددة ✓');
 }
@@ -223,13 +319,15 @@ function getAbsentDays() {
   const y = now.getFullYear();
   const m = now.getMonth();
   const todayK = todayKey(); // key اليوم الحالي كـ string
+  const monthAttendance = getMonthAttendance();
+  const monthHolidays = getMonthHolidays();
   let absent = 0;
   const cur = new Date(y, m, 1);
   while (true) {
     const key = dateToKey(cur);
     if (key >= todayK) break; // لا نحسب اليوم الحالي أو ما بعده
     const dow = cur.getDay();
-    if (dow !== 5 && dow !== 6 && !holidays.includes(key) && !attendance.includes(key)) {
+    if (dow !== 5 && dow !== 6 && !monthHolidays.includes(key) && !monthAttendance.includes(key)) {
       absent++;
     }
     cur.setDate(cur.getDate() + 1);
@@ -310,14 +408,19 @@ function buildCalendar() {
     cal.appendChild(blank);
   }
 
+  // بيانات الشهر كله (الفترتين A و B مجتمعتين) عشان أيام الفترة السابقة
+  // تفضل معروضة زي ما هي ومتتحولش لغياب لما الفترة الجديدة تبدأ
+  const monthAttendance = getMonthAttendance();
+  const monthHolidays = getMonthHolidays();
+
   for (let d = 1; d <= days; d++) {
     const date = new Date(y, m, d);
     const key = dateToKey(date);
     const todayD = now.getDate();
     const isToday = d === todayD;
     const isWeekend = date.getDay() === 5 || date.getDay() === 6;
-    const isPresent = attendance.includes(key);
-    const isHoliday = holidays.includes(key);
+    const isPresent = monthAttendance.includes(key);
+    const isHoliday = monthHolidays.includes(key);
     // المستقبل: رقم اليوم أكبر من اليوم الحالي (مقارنة بالأرقام فقط لا بالوقت)
     const isFuture = d > todayD;
 
@@ -397,9 +500,10 @@ function updateActionButtons() {
 
   const hasAbsentSelected = selectedPastDays.length > 0;
 
-  // أيام في قائمة الإلغاء: إجازات أو حضور
-  const hasHolidaySelected = selectedDaysToCancel.some(k => holidays.includes(k));
-  const hasPresentSelected = selectedDaysToCancel.some(k => !holidays.includes(k));
+  // أيام في قائمة الإلغاء: إجازات أو حضور (على مستوى الشهر كله)
+  const monthHolidays = getMonthHolidays();
+  const hasHolidaySelected = selectedDaysToCancel.some(k => monthHolidays.includes(k));
+  const hasPresentSelected = selectedDaysToCancel.some(k => !monthHolidays.includes(k));
 
   const show = (el, visible, type = 'flex') => {
     if (!el) return;
@@ -446,4 +550,4 @@ function addRipple(e) {
 
 document.querySelectorAll('.btn-attend, .btn-cancel, .btn-save, .btn-holiday').forEach(btn => {
   btn.addEventListener('click', addRipple);
-}); 
+});
