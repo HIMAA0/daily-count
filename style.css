@@ -79,6 +79,12 @@ body {
   color: var(--tx3);
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 /* ── Hero ────────────────────────────────────── */
 .hero {
   background: var(--surface);
@@ -486,6 +492,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 /* ── Responsive: small screens (< 360px) ─────── */
 @media (max-width: 360px) {
+  .theme-switch-label { display: none; }
   .app { padding: 1rem 0.75rem 3rem; }
   .hero { padding: 1.25rem 1rem 1.25rem; }
   .hero-amount { font-size: 38px; }
@@ -813,3 +820,138 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     outline-color: #B07D00;
   }
 }
+/* ── Manual Theme Toggle: clear labeled switch ── */
+.theme-switch-wrap {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.theme-switch-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--tx3);
+  letter-spacing: 0.02em;
+  min-width: 26px;
+  text-align: center;
+  user-select: none;
+}
+
+.theme-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 50px;
+  height: 27px;
+  padding: 0;
+  border-radius: 99px;
+  border: 1px solid var(--border-md);
+  background: var(--raised);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.25s ease, border-color 0.25s ease;
+}
+
+.theme-switch:hover { border-color: var(--accent); }
+
+.theme-switch-icon {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--tx3);
+  pointer-events: none;
+  transition: color 0.25s ease, opacity 0.25s ease;
+}
+
+.theme-switch-icon-sun { left: 7px; }
+.theme-switch-icon-moon { right: 7px; }
+
+[data-theme="light"] .theme-switch-icon-sun { color: var(--accent); opacity: 1; }
+[data-theme="light"] .theme-switch-icon-moon { opacity: 0.45; }
+
+[data-theme="dark"] .theme-switch-icon-moon { color: var(--accent); opacity: 1; }
+[data-theme="dark"] .theme-switch-icon-sun { opacity: 0.45; }
+
+.theme-switch-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 21px;
+  height: 21px;
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.18), 0 1px 1px rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+  transition: transform 0.28s cubic-bezier(.4,0,.2,1);
+}
+
+.thumb-icon { position: absolute; transition: opacity 0.2s ease, transform 0.2s ease; }
+.thumb-icon-sun  { opacity: 1;  transform: scale(1) rotate(0deg); }
+.thumb-icon-moon { opacity: 0;  transform: scale(0.5) rotate(-45deg); }
+
+[data-theme="dark"] .theme-switch-thumb {
+  transform: translateX(23px);
+}
+[data-theme="dark"] .thumb-icon-sun  { opacity: 0; transform: scale(0.5) rotate(45deg); }
+[data-theme="dark"] .thumb-icon-moon { opacity: 1; transform: scale(1) rotate(0deg); }
+
+.theme-switch:active .theme-switch-thumb { width: 23px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-switch,
+  .theme-switch-thumb,
+  .theme-switch-icon,
+  .thumb-icon { transition: none; }
+}
+
+/* ── Explicit theme overrides (manual toggle) ─── */
+/* These give the manual toggle priority over the OS-level
+   prefers-color-scheme rules already defined above, without
+   altering any of the existing default colors. */
+
+:root[data-theme="light"] {
+  --bg:        #F4F3F0;
+  --surface:   #FFFFFF;
+  --raised:    #FAFAF8;
+  --border:    rgba(0,0,0,0.09);
+  --border-md: rgba(0,0,0,0.15);
+  --tx1: #181816;
+  --tx2: #6A6A67;
+  --tx3: #ADADAA;
+  --accent-dim: #1D9E7518;
+}
+
+:root[data-theme="dark"] {
+  --bg:        #141412;
+  --surface:   #1E1E1B;
+  --raised:    #252522;
+  --border:    rgba(255,255,255,0.08);
+  --border-md: rgba(255,255,255,0.14);
+  --tx1: #EBEBDF;
+  --tx2: #9A9A96;
+  --tx3: #5A5A58;
+  --accent-dim: #1D9E7514;
+}
+
+[data-theme="dark"] .day.holiday { background: #2A2100; color: #F5C842; border-color: #6B5000; }
+[data-theme="dark"] .btn-holiday { background: #1E1A00; color: #D4A000; border-color: #6B5000; }
+[data-theme="dark"] .btn-holiday:hover { background: #2A2100; border-color: #D4A000; }
+[data-theme="dark"] .holiday-check-box-unused { background: #6B5000; color: #F5C842; }
+[data-theme="dark"] .toast.error { background: #2A0000; color: #FF8080; border-color: #6B2020; }
+[data-theme="dark"] .day.absent { background: #2A0A0A; color: #FF8080; }
+[data-theme="dark"] .day.absent.selected { background: #0F3028 !important; color: #4ECFA0 !important; }
+[data-theme="dark"] .day.present.selected-cancel { background: #2A0A0A !important; color: #FF8080 !important; }
+[data-theme="dark"] .day.holiday.selected-cancel { background: #3A2A00 !important; color: #F5C842 !important; outline-color: #B07D00; }
+
+[data-theme="light"] .day.holiday { background: #FFF3CD; color: #B07D00; border-color: #F5C842; }
+[data-theme="light"] .btn-holiday { background: #FFFBEC; color: #A07000; border-color: #F5C842; }
+[data-theme="light"] .btn-holiday:hover { background: #FFF3CD; border-color: #D4A000; color: #7A5500; }
+[data-theme="light"] .holiday-check-box-unused { background: #F5C842; color: #7A5500; }
+[data-theme="light"] .toast.error { background: #FCEDED; color: #A03030; border-color: #D97070; }
+[data-theme="light"] .day.absent { background: #FCEDED; color: #D94F4F; }
+[data-theme="light"] .day.absent.selected { background: var(--accent-dim) !important; color: var(--accent-dark) !important; }
+[data-theme="light"] .day.present.selected-cancel { background: #FCEDED !important; color: #D94F4F !important; }
+[data-theme="light"] .day.holiday.selected-cancel { background: #FFE082 !important; color: #7A5500 !important; outline-color: #B07D00; }
