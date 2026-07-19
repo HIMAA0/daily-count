@@ -6,6 +6,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>متابعة يومية</title>
   <link rel="stylesheet" href="style.css">
+  <script>
+    (function () {
+      var saved = localStorage.getItem('theme');
+      var theme = saved || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
 </head>
 
 <body>
@@ -15,7 +22,54 @@
     <!-- Header -->
     <header class="header">
       <div class="header-eyebrow">متابعة يومية</div>
-      <div class="header-date" id="headerDate"></div>
+      <div class="header-actions">
+        <div class="header-date" id="headerDate"></div>
+        <div class="theme-switch-wrap">
+          <span class="theme-switch-label" id="themeLabel">فاتح</span>
+          <button class="theme-switch" id="themeToggle" onclick="toggleTheme()" type="button" role="switch"
+            aria-checked="false" aria-label="تبديل بين الوضع الفاتح والوضع الليلي"
+            title="تبديل بين الوضع الفاتح والوضع الليلي" dir="ltr">
+            <svg class="theme-switch-icon theme-switch-icon-sun" width="13" height="13" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"
+              aria-hidden="true">
+              <circle cx="12" cy="12" r="4" />
+              <line x1="12" y1="1" x2="12" y2="3" />
+              <line x1="12" y1="21" x2="12" y2="23" />
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+              <line x1="1" y1="12" x2="3" y2="12" />
+              <line x1="21" y1="12" x2="23" y2="12" />
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+            </svg>
+            <svg class="theme-switch-icon theme-switch-icon-moon" width="12" height="12" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"
+              aria-hidden="true">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+            </svg>
+            <span class="theme-switch-thumb">
+              <svg class="thumb-icon thumb-icon-sun" width="12" height="12" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"
+                aria-hidden="true">
+                <circle cx="12" cy="12" r="4" />
+                <line x1="12" y1="1" x2="12" y2="3" />
+                <line x1="12" y1="21" x2="12" y2="23" />
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                <line x1="1" y1="12" x2="3" y2="12" />
+                <line x1="21" y1="12" x2="23" y2="12" />
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+              </svg>
+              <svg class="thumb-icon thumb-icon-moon" width="11" height="11" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"
+                aria-hidden="true">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+              </svg>
+            </span>
+          </button>
+        </div>
+      </div>
     </header>
 
     <!-- Hero: Net Salary -->
@@ -175,22 +229,26 @@
       </div>
       <div class="footer-social-label">طرق التواصل</div>
       <div class="footer-social">
-        <a href="https://wa.me/201023446111" target="_blank" rel="noopener noreferrer" class="footer-social-link footer-social-whatsapp" aria-label="تواصل عبر واتساب">
+        <a href="https://wa.me/201023446111" target="_blank" rel="noopener noreferrer"
+          class="footer-social-link footer-social-whatsapp" aria-label="تواصل عبر واتساب">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M12.04 2c-5.52 0-10 4.48-10 10 0 1.77.46 3.45 1.27 4.9L2 22l5.25-1.38a9.96 9.96 0 0 0 4.79 1.22h.01c5.52 0 10-4.48 10-10s-4.48-10-10-10zm0 18.15h-.01a8.3 8.3 0 0 1-4.24-1.16l-.3-.18-3.12.82.83-3.04-.2-.31A8.3 8.3 0 0 1 3.7 12c0-4.6 3.75-8.35 8.35-8.35S20.4 7.4 20.4 12s-3.75 8.15-8.36 8.15zm4.58-6.12c-.25-.13-1.48-.73-1.71-.81-.23-.08-.4-.13-.56.13-.17.25-.65.81-.8.98-.15.17-.29.19-.54.06-.25-.13-1.06-.39-2.02-1.24-.75-.66-1.25-1.48-1.4-1.73-.15-.25-.02-.39.11-.51.11-.11.25-.29.37-.44.12-.15.16-.25.25-.42.08-.17.04-.31-.02-.44-.06-.13-.56-1.34-.76-1.84-.2-.48-.41-.42-.56-.42h-.48c-.17 0-.44.06-.67.31-.23.25-.87.85-.87 2.08s.89 2.42 1.02 2.59c.13.17 1.75 2.67 4.24 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.55.1.47-.07 1.48-.6 1.69-1.19.21-.58.21-1.08.15-1.19-.06-.11-.23-.17-.48-.29z"/>
+            <path
+              d="M12.04 2c-5.52 0-10 4.48-10 10 0 1.77.46 3.45 1.27 4.9L2 22l5.25-1.38a9.96 9.96 0 0 0 4.79 1.22h.01c5.52 0 10-4.48 10-10s-4.48-10-10-10zm0 18.15h-.01a8.3 8.3 0 0 1-4.24-1.16l-.3-.18-3.12.82.83-3.04-.2-.31A8.3 8.3 0 0 1 3.7 12c0-4.6 3.75-8.35 8.35-8.35S20.4 7.4 20.4 12s-3.75 8.15-8.36 8.15zm4.58-6.12c-.25-.13-1.48-.73-1.71-.81-.23-.08-.4-.13-.56.13-.17.25-.65.81-.8.98-.15.17-.29.19-.54.06-.25-.13-1.06-.39-2.02-1.24-.75-.66-1.25-1.48-1.4-1.73-.15-.25-.02-.39.11-.51.11-.11.25-.29.37-.44.12-.15.16-.25.25-.42.08-.17.04-.31-.02-.44-.06-.13-.56-1.34-.76-1.84-.2-.48-.41-.42-.56-.42h-.48c-.17 0-.44.06-.67.31-.23.25-.87.85-.87 2.08s.89 2.42 1.02 2.59c.13.17 1.75 2.67 4.24 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.55.1.47-.07 1.48-.6 1.69-1.19.21-.58.21-1.08.15-1.19-.06-.11-.23-.17-.48-.29z" />
           </svg>
           <span>واتساب</span>
         </a>
-        <a href="https://www.instagram.com/ibrahim_mostafa01" target="_blank" rel="noopener noreferrer" class="footer-social-link footer-social-instagram" aria-label="تواصل عبر انستجرام">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <rect x="2.5" y="2.5" width="19" height="19" rx="5.5" ry="5.5"/>
-            <circle cx="12" cy="12" r="4.2"/>
-            <circle cx="17.4" cy="6.6" r="0.6" fill="currentColor" stroke="none"/>
+        <a href="https://www.instagram.com/ibrahim_mostafa01" target="_blank" rel="noopener noreferrer"
+          class="footer-social-link footer-social-instagram" aria-label="تواصل عبر انستجرام">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="2.5" y="2.5" width="19" height="19" rx="5.5" ry="5.5" />
+            <circle cx="12" cy="12" r="4.2" />
+            <circle cx="17.4" cy="6.6" r="0.6" fill="currentColor" stroke="none" />
           </svg>
           <span>انستجرام</span>
         </a>
       </div>
-      <div class="footer-year">© ٢٠٢٥ — جميع الحقوق محفوظة</div>
+      <div class="footer-year">© 2026 — جميع الحقوق محفوظة</div>
     </footer>
 
   </div>
