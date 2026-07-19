@@ -1,6 +1,25 @@
 /* ── Helpers ─────────────────────────────────── */
 const $ = id => document.getElementById(id);
 
+/* ── Theme Toggle (Dark / Light) ──────────────── */
+function applyThemeUI(theme) {
+  const btn = $('themeToggle');
+  const label = $('themeLabel');
+  if (btn) btn.setAttribute('aria-checked', theme === 'dark' ? 'true' : 'false');
+  if (label) label.textContent = theme === 'dark' ? 'ليلي' : 'فاتح';
+}
+
+function toggleTheme() {
+  const root = document.documentElement;
+  const current = root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+  const next = current === 'dark' ? 'light' : 'dark';
+  root.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+  applyThemeUI(next);
+}
+
+applyThemeUI(document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light');
+
 function toArabicNum(n) {
   return String(n).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
 }
