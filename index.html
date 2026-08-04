@@ -17,6 +17,53 @@
 
 <body>
 
+  <!-- Welcome Modal -->
+  <div class="modal-overlay" id="welcomeOverlay" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
+    <div class="modal-box">
+      <div class="modal-icon">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1" />
+          <circle cx="12" cy="12" r="3" />
+        </svg>
+      </div>
+      <h2 class="modal-title" id="welcomeTitle">تم إضافة ميزة جديدة</h2>
+      <p class="modal-text">
+        دلوقتي لما تسجل حضورك (اليوم أو أي يوم من التقويم)، هتظهر لك نافذة تسألك هل الحضور كامل
+        ولا فيه تأخير. لو اخترت "متأخر" هتحدد نسبة الخصم: ربع يوم أو نص يوم.
+      </p>
+      <p class="modal-text">
+        اليوم بيفضل مسجل حضور عادي، لكن قيمة الخصم بتتحسب تلقائياً من صافي المستحق، وهيبان في
+        التقويم بعلامة مميزة (¼ أو ½) تفرّقه عن يوم الحضور الكامل.
+      </p>
+      <button class="modal-btn" id="welcomeCloseBtn" type="button" onclick="closeWelcomeModal()">
+        حسناً، فهمت
+      </button>
+    </div>
+  </div>
+
+  <!-- Lateness Choice Modal -->
+  <div class="modal-overlay" id="latenessOverlay" role="dialog" aria-modal="true" aria-labelledby="latenessTitle">
+    <div class="modal-box">
+      <div class="modal-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="9" />
+          <polyline points="12 7 12 12 15.5 14" />
+        </svg>
+      </div>
+      <h2 class="modal-title" id="latenessTitle">هل الحضور كامل؟</h2>
+      <p class="modal-text modal-text-sub" style="margin-bottom: 18px;">
+        لو حصل تأخير حدد قيمة الخصم، وهيتحسب صافي المستحق تلقائياً
+      </p>
+      <div class="lateness-options">
+        <button class="modal-btn" id="latenessFullBtn" type="button">حضور كامل</button>
+        <button class="modal-btn modal-btn-secondary" id="latenessQuarterBtn" type="button">متأخر — خصم ربع يوم</button>
+        <button class="modal-btn modal-btn-secondary" id="latenessHalfBtn" type="button">متأخر — خصم نص يوم</button>
+      </div>
+    </div>
+  </div>
+
   <div class="app">
 
     <!-- Header -->
@@ -162,6 +209,7 @@
         <span class="legend-item"><span class="legend-dot absent-dot"></span>غياب</span>
         <span class="legend-item"><span class="legend-dot holiday-dot"></span>إجازة رسمية</span>
         <span class="legend-item"><span class="legend-dot weekend-dot"></span>إجازة أسبوعية</span>
+        <span class="legend-item"><span class="legend-dot late-dot"></span>حضور متأخر (خصم)</span>
       </div>
 
       <button id="btnSaveSelected" class="btn-save" style="display: none; margin-top: 16px;"
