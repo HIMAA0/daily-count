@@ -397,6 +397,8 @@ body {
   transform: scale(0.93);
 }
 
+.day.present.late.selected-cancel { outline-color: #D94F4F; }
+
 /* إجازات رسمية محددة للإلغاء → ذهبي غامق */
 .day.holiday.selected-cancel {
   background: #FFE082 !important;
@@ -409,6 +411,36 @@ body {
 .day.future {
   opacity: 0.28;
   cursor: not-allowed;
+}
+
+/* ── يوم حضور متأخر (خصم ربع/نص يوم) ─────────── */
+.day.present.late {
+  outline: 1.5px dashed #E0A100;
+  outline-offset: -2px;
+}
+
+.day-badge {
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #E0A100;
+  color: #fff;
+  font-size: 8px;
+  font-weight: 800;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  pointer-events: none;
+}
+
+.late-dot {
+  background: var(--accent);
+  border: 1.5px dashed #E0A100;
 }
 
 /* ── Settings Fields ─────────────────────────── */
@@ -955,3 +987,115 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 [data-theme="light"] .day.absent.selected { background: var(--accent-dim) !important; color: var(--accent-dark) !important; }
 [data-theme="light"] .day.present.selected-cancel { background: #FCEDED !important; color: #D94F4F !important; }
 [data-theme="light"] .day.holiday.selected-cancel { background: #FFE082 !important; color: #7A5500 !important; outline-color: #B07D00; }
+
+/* ── Welcome Modal ───────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  background: rgba(10, 10, 8, 0.55);
+  backdrop-filter: blur(3px);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+.modal-overlay.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal-box {
+  width: 100%;
+  max-width: 380px;
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 1.75rem 1.5rem 1.5rem;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+  text-align: center;
+  transform: translateY(14px) scale(0.97);
+  transition: transform 0.28s cubic-bezier(.4,0,.2,1);
+}
+
+.modal-overlay.visible .modal-box {
+  transform: translateY(0) scale(1);
+}
+
+.modal-icon {
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+
+.modal-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--tx1);
+  margin-bottom: 12px;
+  line-height: 1.4;
+}
+
+.modal-text {
+  font-size: 13.5px;
+  line-height: 1.9;
+  color: var(--tx2);
+  margin-bottom: 12px;
+}
+
+.modal-text-sub {
+  font-size: 12.5px;
+  color: var(--tx3);
+  margin-bottom: 20px;
+}
+
+.modal-btn {
+  width: 100%;
+  padding: 13px 18px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--r-md);
+  font-size: 15px;
+  font-weight: 600;
+  font-family: 'Cairo', sans-serif;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.modal-btn:hover  { background: var(--accent-dark); }
+.modal-btn:active { transform: scale(0.97); }
+
+/* ── Lateness Modal ──────────────────────────── */
+.lateness-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.modal-btn-secondary {
+  background: var(--raised);
+  color: var(--tx1);
+  border: 1px solid var(--border-md);
+}
+
+.modal-btn-secondary:hover {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: var(--accent-dark);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal-overlay,
+  .modal-box { transition: none; }
+}
