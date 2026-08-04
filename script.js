@@ -1,6 +1,33 @@
 /* ── Helpers ─────────────────────────────────── */
 const $ = id => document.getElementById(id);
 
+/* ── Welcome Modal (shown once per visitor, re-shown when content changes) ───── */
+const WELCOME_SEEN_KEY = 'welcomeSeen_lateFeature';
+
+function closeWelcomeModal() {
+  const overlay = $('welcomeOverlay');
+  if (!overlay) return;
+  overlay.classList.remove('visible');
+  localStorage.setItem(WELCOME_SEEN_KEY, '1');
+}
+
+(function initWelcomeModal() {
+  const overlay = $('welcomeOverlay');
+  if (!overlay) return;
+
+  if (!localStorage.getItem(WELCOME_SEEN_KEY)) {
+    overlay.classList.add('visible');
+  }
+
+  overlay.addEventListener('click', function (e) {
+    if (e.target === overlay) closeWelcomeModal();
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && overlay.classList.contains('visible')) closeWelcomeModal();
+  });
+})();
+
 /* ── Theme Toggle (Dark / Light) ──────────────── */
 function applyThemeUI(theme) {
   const btn = $('themeToggle');
@@ -72,19 +99,25 @@ if (storedPeriodKey !== period.key) {
   if (storedPeriodKey) {
     const oldAttendance = localStorage.getItem('attendance') || '[]';
     const oldHolidays = localStorage.getItem('holidays') || '[]';
+    const oldLateDays = localStorage.getItem('lateDays') || '{}';
     localStorage.setItem(`attendance_${storedPeriodKey}`, oldAttendance);
     localStorage.setItem(`holidays_${storedPeriodKey}`, oldHolidays);
+    localStorage.setItem(`lateDays_${storedPeriodKey}`, oldLateDays);
   }
   // نبدأ بيانات الفترة الجديدة (نسترجعها لو كانت موجودة مسبقًا)
   const savedAttendance = localStorage.getItem(`attendance_${period.key}`) || '[]';
   const savedHolidays = localStorage.getItem(`holidays_${period.key}`) || '[]';
+  const savedLateDays = localStorage.getItem(`lateDays_${period.key}`) || '{}';
   localStorage.setItem('attendance', savedAttendance);
   localStorage.setItem('holidays', savedHolidays);
+  localStorage.setItem('lateDays', savedLateDays);
   localStorage.setItem('periodKey', period.key);
 }
 
 let attendance = JSON.parse(localStorage.getItem('attendance') || '[]');
 let holidays = JSON.parse(localStorage.getItem('holidays') || '[]');
+// lateDays: خريطة { 'yyyy-m-d': 0.25 | 0.5 } لأيام الحضور المتأخرة ونسبة الخصم منها
+let lateDays = JSON.parse(localStorage.getItem('lateDays') || '{}');
 let rate = +(localStorage.getItem('rate') || 225);
 let deduction = +(localStorage.getItem('deduction') || 0);
 
@@ -109,18 +142,23 @@ function getStoredPeriodData(key) {
   return {
     attendance: JSON.parse(localStorage.getItem(`attendance_${key}`) || '[]'),
     holidays: JSON.parse(localStorage.getItem(`holidays_${key}`) || '[]'),
+    lateDays: JSON.parse(localStorage.getItem(`lateDays_${key}`) || '{}'),
   };
 }
 
 // يحفظ بيانات فترة معيّنة، ويحدّث المتغيرات الحالية لو كانت هي الفترة الشغالة
-function setStoredPeriodData(key, att, hol) {
+function setStoredPeriodData(key, att, hol, late) {
+  late = late || {};
   localStorage.setItem(`attendance_${key}`, JSON.stringify(att));
   localStorage.setItem(`holidays_${key}`, JSON.stringify(hol));
+  localStorage.setItem(`lateDays_${key}`, JSON.stringify(late));
   if (key === period.key) {
     attendance = att;
     holidays = hol;
+    lateDays = late;
     localStorage.setItem('attendance', JSON.stringify(att));
     localStorage.setItem('holidays', JSON.stringify(hol));
+    localStorage.setItem('lateDays', JSON.stringify(late));
   }
 }
 
@@ -141,6 +179,15 @@ function getMonthHolidays() {
   const dataA = keyA === period.key ? holidays : getStoredPeriodData(keyA).holidays;
   const dataB = keyB === period.key ? holidays : getStoredPeriodData(keyB).holidays;
   return [...new Set([...dataA, ...dataB])];
+}
+
+function getMonthLateDays() {
+  const now = new Date();
+  const keyA = `${now.getFullYear()}-${now.getMonth() + 1}-A`;
+  const keyB = `${now.getFullYear()}-${now.getMonth() + 1}-B`;
+  const dataA = keyA === period.key ? lateDays : getStoredPeriodData(keyA).lateDays;
+  const dataB = keyB === period.key ? lateDays : getStoredPeriodData(keyB).lateDays;
+  return { ...dataA, ...dataB };
 }
 
 $('dailyRate').value = rate;
@@ -173,16 +220,15 @@ function markAttendance() {
     showToast('تم تسجيل اليوم بالفعل ✓', true);
     return;
   }
-  attendance.push(key);
-  save();
-  showToast('تم تسجيل الحضور ✓');
-  render();
+  // بدل التسجيل المباشر: نسأل هل الحضور كامل ولا فيه تأخير يستوجب خصم
+  openLatenessModal([key], 'today');
 }
 
 function removeToday() {
   const key = todayKey();
   if (attendance.includes(key)) {
     attendance = attendance.filter(k => k !== key);
+    delete lateDays[key];
     save();
     showToast('تم إلغاء حضور اليوم');
     render();
@@ -211,29 +257,98 @@ function markTodayAsHoliday() {
     return;
   }
   attendance = attendance.filter(k => k !== key);
+  delete lateDays[key];
   holidays.push(key);
   save();
   showToast('تم تسجيل اليوم كإجازة رسمية ✓');
   render();
 }
 
-function saveSelectedDays() {
-  if (selectedPastDays.length === 0) return;
+/* ── مودال اختيار نوع الحضور (كامل / متأخر) ───── */
+let pendingAttendanceKeys = [];
+let pendingAttendanceContext = null; // 'today' | 'bulk'
+
+function openLatenessModal(keys, context) {
+  pendingAttendanceKeys = keys;
+  pendingAttendanceContext = context;
+  const overlay = $('latenessOverlay');
+  if (overlay) overlay.classList.add('visible');
+}
+
+function closeLatenessModal() {
+  const overlay = $('latenessOverlay');
+  if (overlay) overlay.classList.remove('visible');
+  pendingAttendanceKeys = [];
+  pendingAttendanceContext = null;
+}
+
+// يسجل الأيام الممرّرة كحضور، ويضبط نسبة خصم التأخير (0.25 / 0.5) أو يمسحها لو حضور كامل
+function commitAttendance(keys, fraction) {
   const groups = {};
-  selectedPastDays.forEach(key => {
+  keys.forEach(key => {
     const pk = periodKeyForKey(key);
     (groups[pk] = groups[pk] || []).push(key);
   });
-  Object.entries(groups).forEach(([pk, keys]) => {
+  Object.entries(groups).forEach(([pk, ks]) => {
     const data = pk === period.key
-      ? { attendance: [...attendance], holidays: [...holidays] }
+      ? { attendance: [...attendance], holidays: [...holidays], lateDays: { ...lateDays } }
       : getStoredPeriodData(pk);
-    keys.forEach(k => { if (!data.attendance.includes(k)) data.attendance.push(k); });
-    setStoredPeriodData(pk, data.attendance, data.holidays);
+    ks.forEach(k => {
+      if (!data.attendance.includes(k)) data.attendance.push(k);
+      if (fraction) {
+        data.lateDays[k] = fraction;
+      } else {
+        delete data.lateDays[k];
+      }
+    });
+    setStoredPeriodData(pk, data.attendance, data.holidays, data.lateDays);
   });
-  selectedPastDays = [];
+}
+
+function confirmAttendanceType(fraction) {
+  const keys = pendingAttendanceKeys;
+  const context = pendingAttendanceContext;
+  if (!keys || keys.length === 0) {
+    closeLatenessModal();
+    return;
+  }
+  commitAttendance(keys, fraction);
+  closeLatenessModal();
+
+  if (context === 'today') {
+    showToast(fraction ? 'تم تسجيل الحضور (متأخر) ✓' : 'تم تسجيل الحضور ✓');
+  } else {
+    selectedPastDays = [];
+    showToast(fraction ? 'تم تسجيل الأيام المحددة (متأخر) ✓' : 'تم تسجيل الأيام المحددة بنجاح ✓');
+  }
   render();
-  showToast('تم تسجيل الأيام المحددة بنجاح ✓');
+}
+
+(function initLatenessModal() {
+  const overlay = $('latenessOverlay');
+  if (!overlay) return;
+
+  const fullBtn = $('latenessFullBtn');
+  const quarterBtn = $('latenessQuarterBtn');
+  const halfBtn = $('latenessHalfBtn');
+
+  if (fullBtn) fullBtn.addEventListener('click', () => confirmAttendanceType(null));
+  if (quarterBtn) quarterBtn.addEventListener('click', () => confirmAttendanceType(0.25));
+  if (halfBtn) halfBtn.addEventListener('click', () => confirmAttendanceType(0.5));
+
+  overlay.addEventListener('click', function (e) {
+    if (e.target === overlay) closeLatenessModal();
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && overlay.classList.contains('visible')) closeLatenessModal();
+  });
+})();
+
+function saveSelectedDays() {
+  if (selectedPastDays.length === 0) return;
+  // نسأل هل الأيام المحددة حضور كامل ولا فيها تأخير يستوجب خصم قبل الحفظ
+  openLatenessModal([...selectedPastDays], 'bulk');
 }
 
 function cancelSelectedDays() {
@@ -249,10 +364,11 @@ function cancelSelectedDays() {
   });
   Object.entries(groups).forEach(([pk, keys]) => {
     const data = pk === period.key
-      ? { attendance: [...attendance], holidays: [...holidays] }
+      ? { attendance: [...attendance], holidays: [...holidays], lateDays: { ...lateDays } }
       : getStoredPeriodData(pk);
     data.attendance = data.attendance.filter(k => !keys.includes(k));
-    setStoredPeriodData(pk, data.attendance, data.holidays);
+    keys.forEach(k => delete data.lateDays[k]);
+    setStoredPeriodData(pk, data.attendance, data.holidays, data.lateDays);
   });
 
   selectedDaysToCancel = selectedDaysToCancel.filter(k => monthHolidays.includes(k));
@@ -275,15 +391,16 @@ function markSelectedAsHoliday() {
 
   Object.entries(groups).forEach(([pk, keys]) => {
     const data = pk === period.key
-      ? { attendance: [...attendance], holidays: [...holidays] }
+      ? { attendance: [...attendance], holidays: [...holidays], lateDays: { ...lateDays } }
       : getStoredPeriodData(pk);
 
     keys.forEach(key => {
       data.attendance = data.attendance.filter(k => k !== key);
+      delete data.lateDays[key];
       if (!data.holidays.includes(key)) data.holidays.push(key);
     });
 
-    setStoredPeriodData(pk, data.attendance, data.holidays);
+    setStoredPeriodData(pk, data.attendance, data.holidays, data.lateDays);
   });
 
   selectedPastDays = [];
@@ -304,10 +421,10 @@ function cancelSelectedHolidays() {
   });
   Object.entries(groups).forEach(([pk, keys]) => {
     const data = pk === period.key
-      ? { attendance: [...attendance], holidays: [...holidays] }
+      ? { attendance: [...attendance], holidays: [...holidays], lateDays: { ...lateDays } }
       : getStoredPeriodData(pk);
     data.holidays = data.holidays.filter(k => !keys.includes(k));
-    setStoredPeriodData(pk, data.attendance, data.holidays);
+    setStoredPeriodData(pk, data.attendance, data.holidays, data.lateDays);
   });
 
   selectedDaysToCancel = [];
@@ -327,9 +444,11 @@ function saveSettings() {
 function save() {
   localStorage.setItem('attendance', JSON.stringify(attendance));
   localStorage.setItem('holidays', JSON.stringify(holidays));
+  localStorage.setItem('lateDays', JSON.stringify(lateDays));
   // احفظ نسخة مرتبطة بالفترة أيضًا
   localStorage.setItem(`attendance_${period.key}`, JSON.stringify(attendance));
   localStorage.setItem(`holidays_${period.key}`, JSON.stringify(holidays));
+  localStorage.setItem(`lateDays_${period.key}`, JSON.stringify(lateDays));
 }
 
 /* ── حساب أيام الغياب على الشهر كله ──────────── */
@@ -363,7 +482,14 @@ function render() {
   const periodEndKey = dateToKey(period.end);
   const attendanceInPeriod = attendance.filter(k => k >= periodStartKey && k <= periodEndKey);
 
-  const net = Math.max(0, attendanceInPeriod.length * rate - deduction);
+  // خصم التأخير: ربع أو نص قيمة اليومية لكل يوم متأخر ضمن الفترة الحالية
+  let lateDeduction = 0;
+  attendanceInPeriod.forEach(k => {
+    const frac = lateDays[k];
+    if (frac) lateDeduction += rate * frac;
+  });
+
+  const net = Math.max(0, attendanceInPeriod.length * rate - lateDeduction - deduction);
 
   // ── التعديل هنا: حساب الأيام المتبقية لنهاية الفترة الحالية ──
   // نلغي توقيت الساعات لتكون الحسبة دقيقة بالأيام
@@ -431,6 +557,7 @@ function buildCalendar() {
   // تفضل معروضة زي ما هي ومتتحولش لغياب لما الفترة الجديدة تبدأ
   const monthAttendance = getMonthAttendance();
   const monthHolidays = getMonthHolidays();
+  const monthLateDays = getMonthLateDays();
 
   for (let d = 1; d <= days; d++) {
     const date = new Date(y, m, d);
@@ -440,6 +567,7 @@ function buildCalendar() {
     const isWeekend = date.getDay() === 5 || date.getDay() === 6;
     const isPresent = monthAttendance.includes(key);
     const isHoliday = monthHolidays.includes(key);
+    const lateFraction = isPresent ? monthLateDays[key] : null;
     // المستقبل: رقم اليوم أكبر من اليوم الحالي (مقارنة بالأرقام فقط لا بالوقت)
     const isFuture = d > todayD;
 
@@ -451,6 +579,7 @@ function buildCalendar() {
       cls += ' holiday';
     } else if (isPresent) {
       cls += ' present';
+      if (lateFraction) cls += ' late';
     } else if (isWeekend) {
       cls += ' weekend';
     } else if (isFuture) {
@@ -461,6 +590,14 @@ function buildCalendar() {
     if (isToday) cls += ' today';
 
     cell.className = cls;
+
+    if (lateFraction) {
+      const badge = document.createElement('span');
+      badge.className = 'day-badge';
+      badge.textContent = lateFraction === 0.5 ? '½' : '¼';
+      cell.appendChild(badge);
+      cell.title = lateFraction === 0.5 ? 'متأخر — خصم نص يوم' : 'متأخر — خصم ربع يوم';
+    }
 
     // ── منطق النقر ────────────────────────────
     cell.onclick = () => {
