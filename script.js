@@ -212,10 +212,6 @@ function markAttendance() {
     return;
   }
   const key = todayKey();
-  if (holidays.includes(key)) {
-    showToast('اليوم إجازة رسمية، لا يمكن تسجيل الحضور', true);
-    return;
-  }
   if (attendance.includes(key)) {
     showToast('تم تسجيل اليوم بالفعل ✓', true);
     return;
@@ -294,6 +290,8 @@ function commitAttendance(keys, fraction) {
       ? { attendance: [...attendance], holidays: [...holidays], lateDays: { ...lateDays } }
       : getStoredPeriodData(pk);
     ks.forEach(k => {
+      // لو اليوم كان مسجل كإجازة رسمية، نلغي الإجازة عشان نقدر نسجله حضور
+      data.holidays = data.holidays.filter(h => h !== k);
       if (!data.attendance.includes(k)) data.attendance.push(k);
       if (fraction) {
         data.lateDays[k] = fraction;
@@ -607,11 +605,15 @@ function buildCalendar() {
 
       if (isHoliday) {
         // تحديد / إلغاء تحديد إجازة رسمية
+        // بنحدد اليوم في القائمتين مع بعض عشان يظهر زر "إلغاء الإجازة"
+        // وزر "تسجيل حضور" مع بعض، فتقدر تختار أي إجراء تحبه لنفس اليوم
         if (selectedDaysToCancel.includes(key)) {
           selectedDaysToCancel = selectedDaysToCancel.filter(k => k !== key);
+          selectedPastDays = selectedPastDays.filter(k => k !== key);
           cell.classList.remove('selected-cancel');
         } else {
           selectedDaysToCancel.push(key);
+          selectedPastDays.push(key);
           cell.classList.add('selected-cancel');
         }
         updateActionButtons();
@@ -660,6 +662,8 @@ function updateActionButtons() {
   const monthHolidays = getMonthHolidays();
   const hasHolidaySelected = selectedDaysToCancel.some(k => monthHolidays.includes(k));
   const hasPresentSelected = selectedDaysToCancel.some(k => !monthHolidays.includes(k));
+  // أيام غياب مختارة مش إجازة رسمية (عشان زر "تحويل لإجازة" ميظهرش لأيام إجازة أصلًا)
+  const hasNonHolidayAbsentSelected = selectedPastDays.some(k => !monthHolidays.includes(k));
 
   const show = (el, visible, type = 'flex') => {
     if (!el) return;
@@ -678,7 +682,7 @@ function updateActionButtons() {
   show(btnCancel, hasPresentSelected, 'flex');
 
   // التعديل هنا فقط
-  show(btnHoliday, hasAbsentSelected || hasPresentSelected, 'flex');
+  show(btnHoliday, hasNonHolidayAbsentSelected || hasPresentSelected, 'flex');
 
   show(btnCancelHol, hasHolidaySelected, 'flex');
 }
