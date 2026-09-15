@@ -5,12 +5,26 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>متابعة يومية</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <script>
     (function () {
       var saved = localStorage.getItem('theme');
       var theme = saved || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
       document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
+  <script>
+    (function () {
+      // الشكل الافتراضي دايمًا "القديم" إلا لو المستخدم اختار "الجديد" بنفسه من قبل
+      var savedDesign = localStorage.getItem('design');
+      var design = savedDesign === 'new' ? 'new' : 'old';
+      document.documentElement.setAttribute('data-design', design);
+      if (localStorage.getItem('designTried') === 'new') {
+        document.documentElement.setAttribute('data-design-tried', 'new');
+      }
     })();
   </script>
 </head>
@@ -21,24 +35,30 @@
   <div class="modal-overlay" id="welcomeOverlay" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
     <div class="modal-box">
       <div class="modal-icon">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1" />
-          <circle cx="12" cy="12" r="3" />
+          <rect x="3" y="3" width="7" height="7" rx="1.5" />
+          <rect x="14" y="3" width="7" height="7" rx="1.5" />
+          <rect x="3" y="14" width="7" height="7" rx="1.5" />
+          <rect x="14" y="14" width="7" height="7" rx="1.5" />
         </svg>
       </div>
-      <h2 class="modal-title" id="welcomeTitle">تم إضافة ميزة جديدة</h2>
-      <p class="modal-text">
-        دلوقتي لما تسجل حضورك (اليوم أو أي يوم من التقويم)، هتظهر لك نافذة تسألك هل الحضور كامل
-        ولا فيه تأخير. لو اخترت "متأخر" هتحدد نسبة الخصم: ربع يوم أو نص يوم.
+      <h2 class="modal-title" id="welcomeTitle">فيه شكل جديد للتطبيق</h2>
+      <p class="modal-text" id="designModalText">
+        جهزنالك تصميم جديد للتطبيق — لوحة دوام بشكل أوضح وأنظم. تقدر تجربه دلوقتي لو حابب،
+        ولو مش عايز، اتخطى ببساطة وهيفضل التطبيق شغال بالشكل اللي انت متعوّد عليه زي ما هو.
       </p>
-      <p class="modal-text">
-        اليوم بيفضل مسجل حضور عادي، لكن قيمة الخصم بتتحسب تلقائياً من صافي المستحق، وهيبان في
-        التقويم بعلامة مميزة (¼ أو ½) تفرّقه عن يوم الحضور الكامل.
+      <p class="modal-text-sub">
+        وفي الحالتين، تقدر تشوف الشكل الجديد في أي وقت تاني من الزرار العائم تحت في الشاشة.
       </p>
-      <button class="modal-btn" id="welcomeCloseBtn" type="button" onclick="closeWelcomeModal()">
-        حسناً، فهمت
-      </button>
+      <div class="lateness-options">
+        <button class="modal-btn" id="designActionBtn" type="button">
+          جرب الشكل الجديد
+        </button>
+        <button class="modal-btn modal-btn-secondary" id="welcomeCloseBtn" type="button" onclick="closeWelcomeModal();">
+          تخطي
+        </button>
+      </div>
     </div>
   </div>
 
@@ -46,14 +66,15 @@
   <div class="modal-overlay" id="latenessOverlay" role="dialog" aria-modal="true" aria-labelledby="latenessTitle">
     <div class="modal-box">
       <div class="modal-icon">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <circle cx="12" cy="12" r="9" />
-          <polyline points="12 7 12 12 15.5 14" />
+          <circle cx="12" cy="13" r="8" />
+          <path d="M12 9v4l3 2" />
+          <path d="M9 2h6" />
         </svg>
       </div>
       <h2 class="modal-title" id="latenessTitle">هل الحضور كامل؟</h2>
-      <p class="modal-text modal-text-sub" style="margin-bottom: 18px;">
+      <p class="modal-text modal-text-sub">
         لو حصل تأخير حدد قيمة الخصم، وهيتحسب صافي المستحق تلقائياً
       </p>
       <div class="lateness-options">
@@ -68,9 +89,21 @@
 
     <!-- Header -->
     <header class="header">
-      <div class="header-eyebrow">متابعة يومية</div>
+      <div class="header-brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="13" r="8" />
+            <path d="M12 9v4l3 2" />
+            <path d="M9 2h6" />
+          </svg>
+        </span>
+        <div class="brand-text">
+          <span class="header-eyebrow">متابعة يومية</span>
+          <span class="header-date" id="headerDate"></span>
+        </div>
+      </div>
       <div class="header-actions">
-        <div class="header-date" id="headerDate"></div>
         <div class="theme-switch-wrap">
           <span class="theme-switch-label" id="themeLabel">فاتح</span>
           <button class="theme-switch" id="themeToggle" onclick="toggleTheme()" type="button" role="switch"
@@ -121,10 +154,23 @@
 
     <!-- Hero: Net Salary -->
     <section class="hero">
-      <div class="hero-label">صافي المستحق</div>
-      <div class="hero-amount" id="salary">٠</div>
-      <div class="hero-unit">جنيه</div>
-      <div class="hero-period" id="periodText"></div>
+      <div class="hero-top">
+        <span class="hero-label">صافي المستحق</span>
+        <span class="hero-period-badge">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="4" width="18" height="18" rx="2" />
+            <line x1="16" y1="2" x2="16" y2="6" />
+            <line x1="8" y1="2" x2="8" y2="6" />
+            <line x1="3" y1="10" x2="21" y2="10" />
+          </svg>
+          <span id="periodText"></span>
+        </span>
+      </div>
+      <div class="hero-readout">
+        <span class="hero-amount" id="salary">٠</span>
+        <span class="hero-unit">جنيه</span>
+      </div>
     </section>
 
     <!-- Stats Row -->
@@ -178,7 +224,11 @@
     <button class="btn-holiday" id="btnTodayHoliday" style="margin-bottom: 14px;" onclick="markTodayAsHoliday()">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
         stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+        <rect x="3" y="4" width="18" height="18" rx="2" />
+        <line x1="16" y1="2" x2="16" y2="6" />
+        <line x1="8" y1="2" x2="8" y2="6" />
+        <line x1="3" y1="10" x2="21" y2="10" />
+        <path d="M8 15l2.5 2.5L16 12" />
       </svg>
       تسجيل اليوم كإجازة رسمية
     </button>
@@ -224,14 +274,18 @@
         onclick="markSelectedAsHoliday()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
           stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+          <rect x="3" y="4" width="18" height="18" rx="2" />
+          <line x1="16" y1="2" x2="16" y2="6" />
+          <line x1="8" y1="2" x2="8" y2="6" />
+          <line x1="3" y1="10" x2="21" y2="10" />
+          <path d="M8 15l2.5 2.5L16 12" />
         </svg>
         تسجيل كإجازة رسمية
       </button>
 
-      <!-- استبدل أو أضف هذا الزر بجانب زر الإجازة الرسمية -->
-      <button id="btnCancelHolidays" class="btn-cancel"
-        style="display: none; margin-top: 8px; width: 100%; justify-content: center; border-color: #F5C842; color: #A07000;"
+      <!-- إلغاء الإجازات المحددة -->
+      <button id="btnCancelHolidays" class="btn-cancel btn-cancel-holiday"
+        style="display: none; margin-top: 8px; width: 100%; justify-content: center;"
         onclick="cancelSelectedHolidays()">
         إلغاء الإجازات المحددة
       </button>
@@ -300,6 +354,70 @@
     </footer>
 
   </div>
+
+  <!-- Design Mode Floating Button -->
+  <button type="button" id="designFab" class="design-fab" onclick="openDesignModal()" aria-haspopup="dialog"
+    aria-label="اعرض خيار شكل الواجهة" title="شكل الواجهة">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+      stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <rect x="3" y="3" width="7" height="7" rx="1.5" />
+      <rect x="14" y="3" width="7" height="7" rx="1.5" />
+      <rect x="3" y="14" width="7" height="7" rx="1.5" />
+      <rect x="14" y="14" width="7" height="7" rx="1.5" />
+    </svg>
+  </button>
+
+  <script>
+    // ── Design Mode (قديم / جديد) ────────────────────────────────────
+    // مستقل تمامًا عن script.js — بيتحكم بس في الـ data-design attribute
+    // ومحتوى مودال الشرح؛ ما بيلمسش أي منطق تاني في التطبيق.
+    function chooseDesign(design) {
+      document.documentElement.setAttribute('data-design', design);
+      try { localStorage.setItem('design', design); } catch (e) {}
+      if (design === 'new') {
+        try { localStorage.setItem('designTried', 'new'); } catch (e) {}
+        document.documentElement.setAttribute('data-design-tried', 'new');
+      }
+    }
+
+    // بيحدّث نص المودال وزرار الإجراء حسب الشكل الحالي
+    function updateDesignModalContent() {
+      var current = document.documentElement.getAttribute('data-design') || 'old';
+      var textEl = document.getElementById('designModalText');
+      var actionBtn = document.getElementById('designActionBtn');
+      if (!textEl || !actionBtn) return;
+
+      if (current === 'new') {
+        textEl.textContent = 'إنت دلوقتي بتستخدم الشكل الجديد للتطبيق. لو حابب ترجع للشكل القديم تقدر في أي وقت من هنا.';
+        actionBtn.textContent = 'الرجوع للشكل القديم';
+        actionBtn.onclick = function () { chooseDesign('old'); closeWelcomeModal(); };
+      } else {
+        textEl.textContent = 'جهزتلك تصميم جديد للتطبيق — لوحة دوام بشكل أوضح وأنظم. تقدر تجربه دلوقتي لو حابب، ولو مش عايز، اتخطى ببساطة وهيفضل التطبيق شغال بالشكل اللي انت متعوّد عليه زي ما هو.';
+        actionBtn.textContent = 'جرب الشكل الجديد';
+        actionBtn.onclick = function () { chooseDesign('new'); closeWelcomeModal(); };
+      }
+    }
+
+    // بيفتح نفس مودال الترحيب من الزرار العائم في أي وقت
+    function openDesignModal() {
+      updateDesignModalContent();
+      var overlay = document.getElementById('welcomeOverlay');
+      if (overlay) overlay.classList.add('visible');
+    }
+
+    // أول مرة بس يدخل فيها حد الموقع (بعد التحديث ده) نوريه المودال تلقائي
+    // عشان نعرّفه بالشكل الجديد؛ بعد كده بيفتحها بنفسه من الأيقونة العائمة.
+    document.addEventListener('DOMContentLoaded', function () {
+      updateDesignModalContent();
+      try {
+        if (!localStorage.getItem('designIntroShown')) {
+          var overlay = document.getElementById('welcomeOverlay');
+          if (overlay) overlay.classList.add('visible');
+          localStorage.setItem('designIntroShown', '1');
+        }
+      } catch (e) {}
+    });
+  </script>
 
   <script src="script.js"></script>
 </body>
