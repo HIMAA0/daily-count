@@ -1210,7 +1210,7 @@ body { background: var(--bg); color: var(--tx1); }
 [data-theme="light"][data-design="old"] .day.present.selected-cancel { background: #FCEDED !important; color: #D94F4F !important; }
 [data-theme="light"][data-design="old"] .day.holiday.selected-cancel { background: #FFE082 !important; color: #7A5500 !important; outline-color: #B07D00; }
 
-/* ── Welcome Modal ───────────────────────────── */
+/* ── Modals ──────────────────────────────────── */
 [data-design="old"] .modal-overlay {
   position: fixed;
   inset: 0;
@@ -2475,7 +2475,7 @@ body { background: var(--bg); color: var(--tx1); }
   --holiday-select-bg: #1E3A56;
 }
 
-/* ── Welcome / Lateness Modals ───────────────── */
+/* ── Modals (Update / Lateness / Report) ─────── */
 [data-design="new"] .modal-overlay {
   position: fixed;
   inset: 0;
