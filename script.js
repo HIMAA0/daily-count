@@ -26,20 +26,40 @@ function withViewTransition(fn) {
   }
 }
 
-/* ── Welcome Modal + مودال التحديثات الجديدة (تظهر مرة واحدة بس) ───── */
-const WELCOME_SEEN_KEY = 'designIntroSeen_v4';
-const UPDATE_SEEN_KEY = 'updateNoticeSeen_v8';
+/* ── مودال الإضافات الجديدة ───────────────────────────────────────
+   • بيظهر مرة واحدة بس، وللمستخدمين اللي عندهم بيانات محفوظة (استخدموا التطبيق قبل كده).
+   • المستخدم الجديد (أول مرة) مبيظهرلوش حاجة خالص، وبنعلّم المودال "متشاف" عنده
+     من أول فتحة عشان مايظهرلوش في زياراته الجاية.
+   • لما تضيف تحديثات جديدة وعايز اللي عنده داتا يشوف المودال تاني:
+     غيّر الرقم في UPDATE_SEEN_KEY (v9 ← v10 ← ...).
+   ─────────────────────────────────────────────────────────────────── */
+const UPDATE_SEEN_KEY = 'updateNoticeSeen_v9';
 
-function closeWelcomeModal() {
-  const overlay = $('welcomeOverlay');
-  if (!overlay) return;
-  overlay.classList.remove('visible');
-  localStorage.setItem(WELCOME_SEEN_KEY, '1');
+// قراءة/كتابة آمنة (لو المتصفح مانع التخزين مننهارش)
+function lsGet(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
+function lsSet(key, val) { try { localStorage.setItem(key, val); } catch (e) {} }
+
+// هل المتصفح ده فيه بيانات من استخدام سابق للتطبيق؟
+// (بنبص على مفاتيح التطبيق نفسه بس، عشان أي موقع تاني على نفس الدومين ميلخبطش الحسبة)
+function hasPreviousAppData() {
+  const appKeys = [
+    'periodKey', 'attendance', 'holidays', 'lateDays', 'overtimeHours',
+    'rate', 'deduction', 'overtimeRate', 'currency',
+    'theme', 'design', 'accentColor', 'greetingUserName', 'greetingWorkRecord'
+  ];
+  if (appKeys.some(k => lsGet(k) !== null)) return true;
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i) || '';
+      if (/^(attendance|holidays|lateDays|overtimeHours)_/.test(k)) return true;
+    }
+  } catch (e) {}
+  return false;
 }
 
 function maybeShowUpdateNotice() {
   const overlay = $('updateOverlay');
-  if (!overlay || localStorage.getItem(UPDATE_SEEN_KEY)) return;
+  if (!overlay || lsGet(UPDATE_SEEN_KEY)) return;
   overlay.classList.add('visible');
 }
 
@@ -47,37 +67,22 @@ function closeUpdateNotice() {
   const overlay = $('updateOverlay');
   if (!overlay) return;
   overlay.classList.remove('visible');
-  localStorage.setItem(UPDATE_SEEN_KEY, '1');
+  lsSet(UPDATE_SEEN_KEY, '1');
 }
-
-(function initWelcomeModal() {
-  const overlay = $('welcomeOverlay');
-  if (!overlay) return;
-
-  if (!localStorage.getItem(WELCOME_SEEN_KEY)) {
-    // مستخدم جديد تمامًا: بيشوف التطبيق بكل مميزاته الحالية من أول لحظة،
-    // فمفيش داعي إنه يشوف مودال "إضافات جديدة" كمان علطول بعدها — بنعتبره
-    // شافه ضمنيًا ومنعرضهوش تاني، عشان منضايقوش بمودالين ورا بعض.
-    try { localStorage.setItem(UPDATE_SEEN_KEY, '1'); } catch (e) {}
-    overlay.classList.add('visible');
-  } else {
-    // مستخدم قديم استخدم التطبيق قبل كده: يستاهل يشوف ملخص الإضافات
-    // الجديدة اللي فاتته، فده اللي بيظهرله (لوحده، من غير مودال الترحيب).
-    setTimeout(maybeShowUpdateNotice, 320);
-  }
-
-  overlay.addEventListener('click', function (e) {
-    if (e.target === overlay) closeWelcomeModal();
-  });
-
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && overlay.classList.contains('visible')) closeWelcomeModal();
-  });
-})();
 
 (function initUpdateNoticeModal() {
   const overlay = $('updateOverlay');
   if (!overlay) return;
+
+  if (!lsGet(UPDATE_SEEN_KEY)) {
+    if (hasPreviousAppData()) {
+      // مستخدم قديم: يشوف ملخص الإضافات مرة واحدة
+      setTimeout(maybeShowUpdateNotice, 320);
+    } else {
+      // مستخدم جديد: مفيش حاجة تظهرله، ونعتبره شاف الإضافات عشان مايظهرش في زياراته الجاية
+      lsSet(UPDATE_SEEN_KEY, '1');
+    }
+  }
 
   overlay.addEventListener('click', function (e) {
     if (e.target === overlay) closeUpdateNotice();
