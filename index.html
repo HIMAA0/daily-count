@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+CjxyZWN0IHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCIgcng9IjE2IiBmaWxsPSIjMUQ5RTc1Ii8+CjxjaXJjbGUgY3g9IjMyIiBjeT0iMzQiIHI9IjE3IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS13aWR0aD0iNC41Ii8+CjxwYXRoIGQ9Ik0zMiAyNHYxMGw3IDUiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSI0LjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8cGF0aCBkPSJNMjYgN2gxMiIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjQuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+Cjwvc3ZnPg==">
   <script>
     (function () {
       var saved = localStorage.getItem('theme');
@@ -18,13 +19,22 @@
   </script>
   <script>
     (function () {
-      // الشكل الافتراضي دايمًا "القديم" إلا لو المستخدم اختار "الجديد" بنفسه من قبل
+      // الشكل الافتراضي دايمًا "الكلاسيكي" إلا لو المستخدم اختار "العصري" بنفسه من قبل
       var savedDesign = localStorage.getItem('design');
       var design = savedDesign === 'new' ? 'new' : 'old';
       document.documentElement.setAttribute('data-design', design);
-      if (localStorage.getItem('designTried') === 'new') {
-        document.documentElement.setAttribute('data-design-tried', 'new');
-      }
+    })();
+  </script>
+  <script>
+    (function () {
+      // تطبيق اللون المميز المحفوظ فورًا لتقليل أي وميض بصري قبل تحميل script.js
+      try {
+        var c = localStorage.getItem('accentColor');
+        if (c) {
+          document.documentElement.style.setProperty('--accent', c);
+          document.documentElement.style.setProperty('--present', c);
+        }
+      } catch (e) {}
     })();
   </script>
 </head>
@@ -35,28 +45,54 @@
   <div class="modal-overlay" id="welcomeOverlay" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
     <div class="modal-box">
       <div class="modal-icon">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <rect x="3" y="3" width="7" height="7" rx="1.5" />
-          <rect x="14" y="3" width="7" height="7" rx="1.5" />
-          <rect x="3" y="14" width="7" height="7" rx="1.5" />
-          <rect x="14" y="14" width="7" height="7" rx="1.5" />
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true">
+          <path
+            d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" />
         </svg>
       </div>
-      <h2 class="modal-title" id="welcomeTitle">فيه شكل جديد للتطبيق</h2>
-      <p class="modal-text" id="designModalText">
-        جهزنالك تصميم جديد للتطبيق — لوحة دوام بشكل أوضح وأنظم. تقدر تجربه دلوقتي لو حابب،
-        ولو مش عايز، اتخطى ببساطة وهيفضل التطبيق شغال بالشكل اللي انت متعوّد عليه زي ما هو.
+      <h2 class="modal-title" id="welcomeTitle">أهلاً بيك في متابعة يومية 👋</h2>
+      <p class="modal-text">
+        التطبيق ده هيساعدك تتابع حضورك وغيابك يوم بيوم، ويحسبلك المرتب المستحق أوتوماتيك
+        من غير ما تتعب نفسك بالحساب.
       </p>
-      <p class="modal-text-sub">
-        وفي الحالتين، تقدر تشوف الشكل الجديد في أي وقت تاني من الزرار العائم تحت في الشاشة.
+      <p class="modal-text modal-text-sub" style="text-align:right; line-height: 2;">
+        • سجّل حضورك أو غيابك بضغطة واحدة، والتطبيق بيحسبلك المرتب والخصومات والإضافي أول بأول<br>
+        • تقويم شهري لمراجعة أيامك، وتقرير أداء شامل لآخر 6 شهور<br>
+        • من "الإعدادات" تحت حدد قيمة اليومية والعملة والخصومات وسعر ساعة العمل الإضافي<br>
+        • من أيقونة ⚙️ فوق تقدر تغيّر شكل الواجهة (كلاسيك/عصري) ولونك المميز، وجنبها زرار الوضع الليلي/النهاري<br>
+        • دوس على الاسم فوق الصفحة واكتب اسمك عشان يبقى في استقبالك، وجنبه "السجل" اكتب فيه رقم السجل بتاعك (لحد ٦ أرقام) — وهيفضلوا محفوظين عندك في كل مرة تفتح فيها التطبيق
       </p>
       <div class="lateness-options">
-        <button class="modal-btn" id="designActionBtn" type="button">
-          جرب الشكل الجديد
+        <button class="modal-btn" id="welcomeCloseBtn" type="button" onclick="closeWelcomeModal();">
+          يلا نبدأ
         </button>
-        <button class="modal-btn modal-btn-secondary" id="welcomeCloseBtn" type="button" onclick="closeWelcomeModal();">
-          تخطي
+      </div>
+    </div>
+  </div>
+
+  <!-- Update Notice Modal (يظهر مرة واحدة، بيلخّص كل الإضافات الجديدة) -->
+  <div class="modal-overlay" id="updateOverlay" role="dialog" aria-modal="true" aria-labelledby="updateTitle">
+    <div class="modal-box">
+      <div class="modal-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 2v6l4-2M12 8L8 6" />
+          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L21 8" />
+        </svg>
+      </div>
+      <h2 class="modal-title" id="updateTitle">إضافات جديدة في التطبيق ✨</h2>
+      <p class="modal-text" style="text-align:right; line-height: 2;">
+        • تنقل بسهمين بين شهور التقويم لمراجعة سجلك القديم<br>
+        • تقرير شامل لأداء آخر 6 أشهر بالحضور والغياب والصافي<br>
+        • دعم ساعات العمل الإضافي بمكافأة منفصلة عن الخصومات<br>
+        • اختيار العملة اللي تناسبك بدل الجنيه الثابت<br>
+        • دلوقتي تقدر تبدّل شكل الواجهة بالكامل بكل سهولة، وتغيّر لونك المميز بضغطة واحدة وتستعيد اللون الافتراضي وكل ده دلوقتي مجمّع في قائمة إعدادات واحدة ⚙️ هتلاقيها فوق الصفحة جنب زرار الوضع الليلي/النهاري<br>
+        • تم اضافة رسالة ترحيب باسمك اعلي الصفحة تقدر تضيف وتعدل اسمك في أي وقت بالضغط عليه، وهيفضل محفوظ عندك<br>
+        • جنب اسمك هتلاقي "السجل" — خانة تسجل فيها رقم السجل الخاص بيك للاسترجاع اليه، وهتفضل محفوظة عندك زي اسمك بالظبط
+      </p>
+      <div class="lateness-options">
+        <button class="modal-btn" id="updateCloseBtn" type="button" onclick="closeUpdateNotice();">
+          يلا نبدأ
         </button>
       </div>
     </div>
@@ -75,17 +111,104 @@
       </div>
       <h2 class="modal-title" id="latenessTitle">هل الحضور كامل؟</h2>
       <p class="modal-text modal-text-sub">
-        لو حصل تأخير حدد قيمة الخصم، وهيتحسب صافي المستحق تلقائياً
+        لو حصل تأخير حدد قيمة الخصم، أو لو اشتغلت ساعات إضافية سجلها بمكافأة منفصلة
       </p>
       <div class="lateness-options">
         <button class="modal-btn" id="latenessFullBtn" type="button">حضور كامل</button>
         <button class="modal-btn modal-btn-secondary" id="latenessQuarterBtn" type="button">متأخر — خصم ربع يوم</button>
         <button class="modal-btn modal-btn-secondary" id="latenessHalfBtn" type="button">متأخر — خصم نص يوم</button>
+        <button class="modal-btn modal-btn-secondary" id="latenessOvertimeBtn" type="button">تسجيل ساعات عمل إضافي</button>
+        <div class="overtime-input-row" id="overtimeInputRow">
+          <input type="number" id="overtimeHoursInput" min="0.5" step="0.5" value="1" aria-label="عدد ساعات العمل الإضافي">
+          <span class="overtime-input-suffix">ساعة</span>
+          <button class="modal-btn overtime-confirm-btn" id="overtimeConfirmBtn" type="button">تأكيد</button>
+        </div>
       </div>
     </div>
   </div>
 
+  <!-- Report Modal -->
+  <div class="modal-overlay" id="reportOverlay" role="dialog" aria-modal="true" aria-labelledby="reportTitle">
+    <div class="modal-box report-modal-box">
+      <button class="report-close-btn" type="button" onclick="closeReportModal();" aria-label="إغلاق">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+      <h2 class="modal-title" id="reportTitle">تقرير الأداء — آخر ٦ أشهر</h2>
+      <p class="modal-text-sub" style="margin-bottom: 14px;">
+        الأرقام محسوبة بسعر اليومية الحالي، وما بتشملش خصومات السلف اليدوية للفترات السابقة
+      </p>
+      <div class="report-scroll" id="reportList"></div>
+      <div class="report-totals" id="reportTotals"></div>
+    </div>
+  </div>
+
   <div class="app">
+
+    <!-- Skeleton Loader -->
+    <div class="skeleton-wrap" id="appSkeleton" aria-hidden="true">
+      <div class="skel-line skel-greeting"></div>
+      <div class="skel-block skel-hero"></div>
+      <div class="skel-block skel-stats"></div>
+      <div class="skel-block skel-cal"></div>
+      <div class="skel-block skel-section"></div>
+    </div>
+
+    <div class="app-content" id="appContent">
+
+    <!-- Identity row: الاسم + رقم السجل جنب بعض -->
+    <div class="identity" id="identity">
+
+      <!-- Greeting -->
+      <div class="greeting" id="greeting">
+        <span class="greeting-emoji" aria-hidden="true">👋</span>
+        <span class="greeting-copy">
+          <span class="greeting-prefix" id="greetingPrefix">أهلاً يا</span>
+          <span class="greeting-name-wrap">
+            <span class="greeting-name" id="greetingNameDisplay" role="button" tabindex="0"
+              aria-label="اضغط لتعديل اسمك" title="اضغط لتعديل اسمك">اسمك هنا</span>
+            <input class="greeting-name-input" id="greetingNameInput" type="text" maxlength="20"
+              placeholder="اكتب اسمك" aria-label="اسمك" autocomplete="off" style="display:none" />
+            <svg class="greeting-edit-icon" width="12" height="12" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
+              aria-hidden="true">
+              <path d="M12 20h9" />
+              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
+            </svg>
+          </span>
+        </span>
+      </div>
+
+      <!-- Work Record (رقم السجل: أرقام فقط، بحد أقصى ٦) -->
+      <div class="work-record" id="workRecord">
+        <svg class="work-record-icon" width="13" height="13" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+          aria-hidden="true">
+          <rect x="3" y="4" width="18" height="16" rx="2" />
+          <circle cx="9" cy="11" r="2" />
+          <path d="M15 9h3M15 13h3M6.5 16.5c.5-1.3 1.4-2 2.5-2s2 .7 2.5 2" />
+        </svg>
+        <span class="work-record-label">السجل</span>
+        <span class="work-record-wrap">
+          <span class="work-record-value" id="workRecordDisplay" role="button" tabindex="0"
+            aria-label="اضغط لإضافة أو تعديل رقم السجل" title="اضغط لإضافة أو تعديل رقم السجل">أضف رقمك</span>
+          <input class="work-record-input" id="workRecordInput" type="text" inputmode="numeric" pattern="[0-9]*"
+            enterkeyhint="done" placeholder="٠٠٠٠٠٠" aria-label="رقم السجل (أرقام فقط، حتى ٦ أرقام)"
+            autocomplete="off" autocorrect="off" spellcheck="false" style="display:none" />
+          <svg class="work-record-edit-icon" width="11" height="11" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
+            aria-hidden="true">
+            <path d="M12 20h9" />
+            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
+          </svg>
+        </span>
+        <span class="work-record-hint" id="workRecordHint" role="status" aria-live="polite"></span>
+      </div>
+
+    </div>
 
     <!-- Header -->
     <header class="header">
@@ -149,6 +272,93 @@
             </span>
           </button>
         </div>
+
+        <div class="settings-menu-wrap" id="settingsMenuWrap">
+          <button class="settings-trigger-btn" id="settingsTriggerBtn" type="button" onclick="toggleSettingsMenu()"
+            aria-haspopup="true" aria-expanded="false" aria-controls="settingsMenu" aria-label="إعدادات الشكل والألوان"
+            title="إعدادات الشكل والألوان">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="3" />
+              <path
+                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+            </svg>
+          </button>
+
+          <div class="settings-menu" id="settingsMenu" role="menu" aria-hidden="true">
+            <div class="settings-menu-title">شكل الواجهة واللون</div>
+
+            <div class="settings-menu-row">
+              <span class="settings-menu-row-label">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"
+                  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <line x1="4" y1="7" x2="20" y2="7" />
+                  <line x1="4" y1="12" x2="20" y2="12" />
+                  <line x1="4" y1="17" x2="14" y2="17" />
+                </svg>
+                شكل الواجهة
+              </span>
+              <div class="theme-switch-wrap">
+                <span class="theme-switch-label" id="designLabel">كلاسيك</span>
+                <button class="theme-switch design-switch" id="designToggle" onclick="toggleDesign()" type="button"
+                  role="switch" aria-checked="false" aria-label="تبديل بين شكل الواجهة الكلاسيكي والعصري"
+                  title="شكل الواجهة: كلاسيك / عصري" dir="ltr">
+                  <svg class="theme-switch-icon design-switch-icon-old" width="13" height="13" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
+                    aria-hidden="true">
+                    <line x1="4" y1="7" x2="20" y2="7" />
+                    <line x1="4" y1="12" x2="20" y2="12" />
+                    <line x1="4" y1="17" x2="14" y2="17" />
+                  </svg>
+                  <svg class="theme-switch-icon design-switch-icon-new" width="13" height="13" viewBox="0 0 24 24"
+                    fill="currentColor" stroke="none" aria-hidden="true">
+                    <path
+                      d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" />
+                  </svg>
+                  <span class="design-switch-thumb">
+                    <svg class="design-thumb-icon design-thumb-icon-old" width="12" height="12" viewBox="0 0 24 24"
+                      fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
+                      aria-hidden="true">
+                      <line x1="4" y1="7" x2="20" y2="7" />
+                      <line x1="4" y1="12" x2="20" y2="12" />
+                      <line x1="4" y1="17" x2="14" y2="17" />
+                    </svg>
+                    <svg class="design-thumb-icon design-thumb-icon-new" width="11" height="11" viewBox="0 0 24 24"
+                      fill="currentColor" stroke="none" aria-hidden="true">
+                      <path
+                        d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" />
+                    </svg>
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            <div class="settings-menu-row">
+              <span class="settings-menu-row-label">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"
+                  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="9" />
+                  <path d="M12 3a6 9 0 0 0 0 18 6 9 0 0 0 0-18z" />
+                  <path d="M3 12h18" />
+                </svg>
+                اللون المميز
+              </span>
+              <div class="accent-wrap">
+                <button class="accent-reset-btn" id="accentResetBtn" type="button" onclick="resetAccentColor()"
+                  aria-label="استعادة اللون الافتراضي" title="استعادة اللون الافتراضي">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"
+                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M3 12a9 9 0 1 0 3-6.7" />
+                    <path d="M3 4v5h5" />
+                  </svg>
+                </button>
+                <label class="accent-swatch" id="accentSwatch" title="اللون المميز — اضغط لتغييره">
+                  <input id="accentColorInput" type="color" value="#1D9E75" aria-label="اختيار اللون المميز للتطبيق">
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </header>
 
@@ -169,7 +379,7 @@
       </div>
       <div class="hero-readout">
         <span class="hero-amount" id="salary">٠</span>
-        <span class="hero-unit">جنيه</span>
+        <span class="hero-unit currency-unit">جنيه</span>
       </div>
     </section>
 
@@ -248,6 +458,19 @@
         </svg>
         تقويم الشهر
       </div>
+
+      <div class="cal-month-nav">
+        <button class="cal-nav-btn" id="calPrevBtn" type="button" onclick="navigateMonth(-1)" aria-label="الشهر السابق">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <span class="cal-month-title" id="calMonthTitle"></span>
+        <button class="cal-nav-btn" id="calNextBtn" type="button" onclick="navigateMonth(1)" aria-label="الشهر التالي">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+      </div>
+
       <div class="cal-headers">
         <span>أحد</span><span>إثنين</span><span>ثلاثاء</span><span>أربعاء</span><span>خميس</span><span>جمعة</span><span>سبت</span>
       </div>
@@ -260,7 +483,16 @@
         <span class="legend-item"><span class="legend-dot holiday-dot"></span>إجازة رسمية</span>
         <span class="legend-item"><span class="legend-dot weekend-dot"></span>إجازة أسبوعية</span>
         <span class="legend-item"><span class="legend-dot late-dot"></span>حضور متأخر (خصم)</span>
+        <span class="legend-item"><span class="legend-dot overtime-dot"></span>عمل إضافي (مكافأة)</span>
       </div>
+
+      <button class="btn-save report-open-btn" type="button" style="margin-top: 14px;" onclick="openReportModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"
+          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 3v18h18" /><path d="M7 15l4-5 3 3 5-7" />
+        </svg>
+        عرض تقرير الأداء الشامل
+      </button>
 
       <button id="btnSaveSelected" class="btn-save" style="display: none; margin-top: 16px;"
         onclick="saveSelectedDays()">تسجيل الأيام المحددة</button>
@@ -307,14 +539,34 @@
           <label for="dailyRate">قيمة اليومية</label>
           <div class="input-wrap">
             <input id="dailyRate" type="number" min="1" placeholder="٢٢٥">
-            <span class="input-unit">جنيه</span>
+            <span class="input-unit currency-unit">جنيه</span>
           </div>
         </div>
         <div class="field">
           <label for="deductionInput">السلف والخصومات</label>
           <div class="input-wrap">
             <input id="deductionInput" type="number" min="0" placeholder="٠">
-            <span class="input-unit">جنيه</span>
+            <span class="input-unit currency-unit">جنيه</span>
+          </div>
+        </div>
+        <div class="field">
+          <label for="overtimeRateInput">سعر ساعة العمل الإضافي</label>
+          <div class="input-wrap">
+            <input id="overtimeRateInput" type="number" min="0" placeholder="٠">
+            <span class="input-unit currency-unit">جنيه</span>
+          </div>
+        </div>
+        <div class="field">
+          <label for="currencySelect">العملة</label>
+          <div class="input-wrap select-wrap">
+            <select id="currencySelect">
+              <option value="EGP">جنيه مصري</option>
+              <option value="SAR">ريال سعودي</option>
+              <option value="AED">درهم إماراتي</option>
+              <option value="USD">دولار أمريكي</option>
+              <option value="KWD">دينار كويتي</option>
+              <option value="QAR">ريال قطري</option>
+            </select>
           </div>
         </div>
       </div>
@@ -353,71 +605,8 @@
       <div class="footer-year">© 2026 — جميع الحقوق محفوظة</div>
     </footer>
 
+    </div><!-- /.app-content -->
   </div>
-
-  <!-- Design Mode Floating Button -->
-  <button type="button" id="designFab" class="design-fab" onclick="openDesignModal()" aria-haspopup="dialog"
-    aria-label="اعرض خيار شكل الواجهة" title="شكل الواجهة">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-      stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <rect x="3" y="3" width="7" height="7" rx="1.5" />
-      <rect x="14" y="3" width="7" height="7" rx="1.5" />
-      <rect x="3" y="14" width="7" height="7" rx="1.5" />
-      <rect x="14" y="14" width="7" height="7" rx="1.5" />
-    </svg>
-  </button>
-
-  <script>
-    // ── Design Mode (قديم / جديد) ────────────────────────────────────
-    // مستقل تمامًا عن script.js — بيتحكم بس في الـ data-design attribute
-    // ومحتوى مودال الشرح؛ ما بيلمسش أي منطق تاني في التطبيق.
-    function chooseDesign(design) {
-      document.documentElement.setAttribute('data-design', design);
-      try { localStorage.setItem('design', design); } catch (e) {}
-      if (design === 'new') {
-        try { localStorage.setItem('designTried', 'new'); } catch (e) {}
-        document.documentElement.setAttribute('data-design-tried', 'new');
-      }
-    }
-
-    // بيحدّث نص المودال وزرار الإجراء حسب الشكل الحالي
-    function updateDesignModalContent() {
-      var current = document.documentElement.getAttribute('data-design') || 'old';
-      var textEl = document.getElementById('designModalText');
-      var actionBtn = document.getElementById('designActionBtn');
-      if (!textEl || !actionBtn) return;
-
-      if (current === 'new') {
-        textEl.textContent = 'إنت دلوقتي بتستخدم الشكل الجديد للتطبيق. لو حابب ترجع للشكل القديم تقدر في أي وقت من هنا.';
-        actionBtn.textContent = 'الرجوع للشكل القديم';
-        actionBtn.onclick = function () { chooseDesign('old'); closeWelcomeModal(); };
-      } else {
-        textEl.textContent = 'جهزتلك تصميم جديد للتطبيق — لوحة دوام بشكل أوضح وأنظم. تقدر تجربه دلوقتي لو حابب، ولو مش عايز، اتخطى ببساطة وهيفضل التطبيق شغال بالشكل اللي انت متعوّد عليه زي ما هو.';
-        actionBtn.textContent = 'جرب الشكل الجديد';
-        actionBtn.onclick = function () { chooseDesign('new'); closeWelcomeModal(); };
-      }
-    }
-
-    // بيفتح نفس مودال الترحيب من الزرار العائم في أي وقت
-    function openDesignModal() {
-      updateDesignModalContent();
-      var overlay = document.getElementById('welcomeOverlay');
-      if (overlay) overlay.classList.add('visible');
-    }
-
-    // أول مرة بس يدخل فيها حد الموقع (بعد التحديث ده) نوريه المودال تلقائي
-    // عشان نعرّفه بالشكل الجديد؛ بعد كده بيفتحها بنفسه من الأيقونة العائمة.
-    document.addEventListener('DOMContentLoaded', function () {
-      updateDesignModalContent();
-      try {
-        if (!localStorage.getItem('designIntroShown')) {
-          var overlay = document.getElementById('welcomeOverlay');
-          if (overlay) overlay.classList.add('visible');
-          localStorage.setItem('designIntroShown', '1');
-        }
-      } catch (e) {}
-    });
-  </script>
 
   <script src="script.js"></script>
 </body>
