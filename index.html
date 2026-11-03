@@ -7,7 +7,7 @@
   <title>متابعة يومية</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+CjxyZWN0IHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCIgcng9IjE2IiBmaWxsPSIjMUQ5RTc1Ii8+CjxjaXJjbGUgY3g9IjMyIiBjeT0iMzQiIHI9IjE3IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS13aWR0aD0iNC41Ii8+CjxwYXRoIGQ9Ik0zMiAyNHYxMGw3IDUiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSI0LjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8cGF0aCBkPSJNMjYgN2gxMiIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjQuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+Cjwvc3ZnPg==">
   <script>
@@ -37,9 +37,59 @@
       } catch (e) {}
     })();
   </script>
+  <script>
+    (function () {
+      // بوابة أذكار الصباح: بتظهر مرة واحدة في اليوم، في أي وقت يفتح فيه المستخدم
+      var CFG = window.MORNING_ADHKAR = {
+        doneKey: 'morningAdhkarDone', progressKey: 'morningAdhkarProgress'
+      };
+      try {
+        var now = new Date();
+        var key = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+        CFG.todayKey = key;
+        var force = /[?&]adhkar=1(&|$)/.test(location.search);
+        var done = localStorage.getItem(CFG.doneKey) === key;
+        if (force || !done) document.documentElement.setAttribute('data-adhkar', 'pending');
+      } catch (e) {}
+    })();
+  </script>
 </head>
 
 <body>
+
+  <!-- بوابة أذكار الصباح -->
+  <div class="adhkar-gate" id="adhkarGate" role="dialog" aria-modal="true" aria-labelledby="adhkarTitle">
+    <div class="adhkar-scroll" id="adhkarScroll">
+      <div class="adhkar-wrap">
+        <header class="adhkar-hero">
+          <div class="adhkar-sun" aria-hidden="true">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="4.2" />
+              <path d="M12 2v2.2M12 19.8V22M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M2 12h2.2M19.8 12H22M4.9 19.1l1.6-1.6M17.5 6.5l1.6-1.6" />
+            </svg>
+          </div>
+          <p class="adhkar-eyebrow" id="adhkarGreeting">صباح الخير</p>
+          <h1 class="adhkar-title" id="adhkarTitle">أذكار الصباح</h1>
+          <p class="adhkar-sub">ابدأ يومك بذكر الله، وبعد ما تخلّص الأذكار تدخل على متابعتك اليومية</p>
+          <span class="adhkar-date" id="adhkarDate"></span>
+        </header>
+        <ol class="adhkar-list" id="adhkarList"></ol>
+      </div>
+    </div>
+    <div class="adhkar-bar">
+      <div class="adhkar-bar-inner">
+        <div class="adhkar-progress">
+          <div class="adhkar-progress-track"><div class="adhkar-progress-fill" id="adhkarFill"></div></div>
+          <span class="adhkar-progress-text" id="adhkarProgressText"></span>
+        </div>
+        <button type="button" class="adhkar-enter" id="adhkarEnter" disabled>
+          <span id="adhkarEnterLabel">أكمل الأذكار للدخول</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="adhkar-sr" id="adhkarLive" aria-live="polite"></div>
+  </div>
 
   <!-- Update Notice Modal (يظهر مرة واحدة، بيلخّص كل الإضافات الجديدة) -->
   <div class="modal-overlay" id="updateOverlay" role="dialog" aria-modal="true" aria-labelledby="updateTitle">
@@ -579,6 +629,11 @@
     </div><!-- /.app-content -->
   </div>
 
+  <script src="adhkar.js"></script>
+  <script>
+    // شبكة أمان: لو adhkar.js ما اتحمّلش لأي سبب، التطبيق يفتح عادي
+    if (!window.MORNING_ADHKAR_READY) document.documentElement.removeAttribute('data-adhkar');
+  </script>
   <script src="script.js"></script>
 </body>
 
