@@ -3054,3 +3054,151 @@ body { background: var(--bg); color: var(--tx1); }
 
 /* ── خلايا التقويم الفاضية (قبل أول يوم في الشهر) ── */
 .day.day-blank { visibility: hidden; pointer-events: none; }
+
+/* ══════════════════════════════════════════════════════════════════
+   بوابة أذكار الصباح — شغالة مع الشكلين والوضع الليلي واللون المميز
+   ══════════════════════════════════════════════════════════════════ */
+.adhkar-gate {
+  --ag-surface: var(--surface, var(--panel, #fff));
+  --ag-line: var(--ui-border, rgba(128,128,128,.25));
+  --ag-accent: var(--ui-accent, var(--accent, #1D9E75));
+  --ag-ink: var(--ui-accent-ink, var(--ag-accent));
+  --ag-ring: color-mix(in srgb, var(--ag-accent) 26%, transparent);
+  --ag-soft: color-mix(in srgb, var(--ag-accent) 12%, transparent);
+
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: var(--bg);
+  color: var(--tx1);
+  direction: rtl;
+  text-align: right;
+  outline: none;
+  animation: adhkar-fade-in .45s ease backwards;
+}
+[data-theme="dark"][data-design="old"] .adhkar-gate { --ag-ink: var(--ag-accent); }
+html[data-adhkar="pending"] .adhkar-gate,
+html[data-adhkar="leaving"] .adhkar-gate { display: block; }
+html[data-adhkar="pending"],
+html[data-adhkar="pending"] body { overflow: hidden; }
+html[data-adhkar="pending"] .app { visibility: hidden; }
+.adhkar-gate.is-leaving { opacity: 0; transform: translateY(-10px); pointer-events: none; transition: opacity .4s ease, transform .4s ease; }
+.adhkar-gate :focus-visible { outline: 2px solid var(--ag-accent); outline-offset: 2px; }
+
+.adhkar-scroll {
+  position: absolute; inset: 0;
+  overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
+  padding: max(28px, env(safe-area-inset-top)) 16px 190px;
+  background: radial-gradient(120% 50% at 50% -8%, var(--ag-soft), transparent 70%);
+}
+.adhkar-wrap { max-width: 440px; margin: 0 auto; }
+
+/* Hero */
+.adhkar-hero { text-align: center; padding: 6px 0 22px; }
+.adhkar-sun {
+  width: 64px; height: 64px; margin: 0 auto 14px;
+  display: grid; place-items: center; border-radius: 50%;
+  color: var(--ag-accent); background: var(--ag-soft);
+  box-shadow: 0 0 0 8px color-mix(in srgb, var(--ag-accent) 6%, transparent);
+}
+.adhkar-sun svg { animation: adhkar-spin 40s linear infinite; }
+.adhkar-eyebrow { font-size: 13px; color: var(--tx2); }
+.adhkar-title { font-family: var(--font-display, inherit); font-size: 28px; font-weight: 800; margin: 4px 0 8px; color: var(--tx1); }
+.adhkar-sub { font-size: 13.5px; line-height: 1.9; color: var(--tx2); max-width: 320px; margin: 0 auto; }
+.adhkar-date { display: inline-block; margin-top: 12px; font-size: 12px; color: var(--tx2); }
+
+/* Cards */
+.adhkar-list { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+.adhkar-card {
+  background: var(--ag-surface);
+  border: 1px solid var(--ag-line);
+  border-radius: var(--r-lg, 16px);
+  padding: 14px 16px 12px;
+  cursor: pointer;
+  user-select: none; -webkit-user-select: none; touch-action: manipulation;
+  transition: border-color .25s, box-shadow .25s, opacity .3s, transform .15s;
+}
+.adhkar-card:active { transform: scale(.992); }
+.adhkar-card.is-current { border-color: var(--ag-accent); box-shadow: 0 0 0 3px var(--ag-ring); }
+.adhkar-card.is-done { opacity: .55; cursor: default; }
+.adhkar-card-head { display: flex; align-items: center; gap: 10px; }
+.adhkar-card-num {
+  flex: 0 0 auto; width: 24px; height: 24px; border-radius: 50%;
+  display: grid; place-items: center; font-size: 11px; font-weight: 700;
+  background: var(--ag-soft); color: var(--ag-ink);
+}
+.adhkar-card-title { font-size: 13.5px; font-weight: 700; color: var(--tx2); flex: 1; min-width: 0; }
+.adhkar-card-repeat {
+  flex: 0 0 auto; font-size: 11px; font-weight: 600; padding: 3px 9px;
+  border-radius: 99px; border: 1px solid var(--ag-line); color: var(--tx2);
+}
+.adhkar-card-text {
+  font-family: 'Amiri', 'Noto Naskh Arabic', 'Traditional Arabic', serif;
+  font-size: 22px; line-height: 2.1; text-align: center; color: var(--tx1);
+  white-space: pre-line; margin: 10px 0 8px;
+}
+.adhkar-card-foot { display: flex; align-items: center; gap: 10px; }
+.adhkar-card-source { flex: 1; min-width: 0; font-size: 11.5px; color: var(--tx2); }
+.adhkar-finish {
+  flex: 0 0 auto; font-family: inherit; font-size: 12px; padding: 7px 12px; cursor: pointer;
+  border-radius: var(--r-sm, 8px); border: 1px solid var(--ag-line); background: transparent; color: var(--tx2);
+}
+.adhkar-finish[hidden] { display: none; }
+
+/* Counter */
+.adhkar-counter {
+  position: relative; flex: 0 0 auto; width: 54px; height: 54px; border-radius: 50%;
+  border: none; background: var(--ag-soft); color: var(--ag-ink);
+  font: inherit; font-weight: 800; font-size: 18px; cursor: pointer;
+  display: grid; place-items: center; -webkit-appearance: none; touch-action: manipulation;
+}
+.adhkar-counter:disabled { cursor: default; }
+.adhkar-ring { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+.adhkar-ring circle { fill: none; stroke-width: 3; }
+.adhkar-ring-bg { stroke: var(--ag-line); }
+.adhkar-ring-fg { stroke: var(--ag-accent); stroke-linecap: round; transition: stroke-dashoffset .3s ease; }
+.adhkar-counter-num { position: relative; }
+.adhkar-check { position: relative; display: none; }
+.adhkar-card.is-done .adhkar-counter { background: var(--ag-accent); color: #fff; }
+.adhkar-card.is-done .adhkar-counter-num,
+.adhkar-card.is-done .adhkar-ring { display: none; }
+.adhkar-card.is-done .adhkar-check { display: block; }
+.adhkar-counter.bump { animation: adhkar-bump .18s ease; }
+
+/* Bottom bar */
+.adhkar-bar {
+  position: absolute; inset-inline: 0; bottom: 0;
+  padding: 26px 16px max(14px, env(safe-area-inset-bottom));
+  background: linear-gradient(to top, var(--bg) 62%, transparent);
+}
+.adhkar-bar-inner { max-width: 440px; margin: 0 auto; }
+.adhkar-progress { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 12px; color: var(--tx2); }
+.adhkar-progress-track { flex: 1; height: 6px; border-radius: 99px; background: var(--ag-line); overflow: hidden; }
+.adhkar-progress-fill { height: 100%; width: 0; border-radius: inherit; background: var(--ag-accent); transition: width .35s ease; }
+.adhkar-enter {
+  width: 100%; min-height: 52px; border: none; border-radius: var(--r-md, 14px);
+  font-family: inherit; font-size: 15px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  background: var(--ag-line); color: var(--tx2); cursor: not-allowed;
+  transition: background .3s, color .3s, transform .15s, box-shadow .3s;
+}
+.adhkar-enter svg { display: none; }
+.adhkar-enter:not(:disabled) {
+  background: var(--ag-accent); color: #fff; cursor: pointer;
+  box-shadow: 0 10px 24px -10px var(--ag-accent);
+}
+.adhkar-enter:not(:disabled) svg { display: block; }
+.adhkar-enter:not(:disabled):active { transform: scale(.98); }
+.adhkar-enter.ready { animation: adhkar-pulse 1.2s ease-out 1; }
+
+.adhkar-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+@keyframes adhkar-fade-in { from { opacity: 0; } }
+@keyframes adhkar-spin { to { transform: rotate(360deg); } }
+@keyframes adhkar-bump { 50% { transform: scale(.9); } }
+@keyframes adhkar-pulse { 0% { box-shadow: 0 0 0 0 var(--ag-ring); } 100% { box-shadow: 0 0 0 16px transparent; } }
+@media (prefers-reduced-motion: reduce) {
+  .adhkar-gate, .adhkar-sun svg, .adhkar-counter.bump, .adhkar-enter.ready { animation: none; }
+  .adhkar-gate.is-leaving, .adhkar-card, .adhkar-ring-fg, .adhkar-progress-fill, .adhkar-enter { transition: none; }
+}
