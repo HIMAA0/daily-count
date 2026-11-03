@@ -77,7 +77,13 @@ function closeUpdateNotice() {
   if (!lsGet(UPDATE_SEEN_KEY)) {
     if (hasPreviousAppData()) {
       // مستخدم قديم: يشوف ملخص الإضافات مرة واحدة
-      setTimeout(maybeShowUpdateNotice, 320);
+      const showLater = function () { setTimeout(maybeShowUpdateNotice, 320); };
+      if (document.documentElement.getAttribute('data-adhkar') === 'pending') {
+        // بوابة أذكار الصباح مفتوحة: نستنى لحد ما المستخدم يدخل
+        window.addEventListener('adhkar:done', showLater, { once: true });
+      } else {
+        showLater();
+      }
     } else {
       // مستخدم جديد: مفيش حاجة تظهرله، ونعتبره شاف الإضافات عشان مايظهرش في زياراته الجاية
       lsSet(UPDATE_SEEN_KEY, '1');
